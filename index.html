@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>BioInformatics Project</title>
+		
+	<canvas id="canvas"></canvas>
+	
+    <script type="text/javascript">
+    var reader; //GLOBAL File Reader object for demo purpose only
+	
+	var counter=0;  // Nucleotide Counter 
+
+	
+	/* ---------------------      Code to read file content ---------------------------- */
+	
+	
+    function checkFileAPI() {
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            reader = new FileReader();
+            return true; 
+        } else {
+            alert('The File APIs are not fully supported by your browser. Fallback required.');
+            return false;
+        }
+    }
+
+    /**
+     * read text input
+     */
+    function readText(filePath) {
+        var output = []; //placeholder for text output
+        if(filePath.files && filePath.files[0]) {           
+            reader.onload = function (e) {
+				
+                output = e.target.result;
+                displayContents(output.length);
+				display(output);
+            };//end onload()
+            reader.readAsText(filePath.files[0]);
+        }//end if html5 filelist support
+        else if(ActiveXObject && filePath) { //fallback to IE 6-8 support via ActiveX
+            try {
+                reader = new ActiveXObject("Scripting.FileSystemObject");
+                var file = reader.OpenTextFile(filePath, 1); //ActiveX File Object
+                output = file.ReadAll(); //text contents of file
+                file.Close(); //close file "input stream"
+                displayContents(output);
+            } catch (e) {
+                if (e.number == -2146827859) {
+                    alert('Unable to access local files due to browser security settings. ' + 
+                     'To overcome this, go to Tools->Internet Options->Security->Custom Level. ' + 
+                     'Find the setting for "Initialize and script ActiveX controls not marked as safe" and change it to "Enable" or "Prompt"'); 
+                }
+            }       
+        }
+        else { 
+            return false;
+        }       
+        return true;
+    }   
+
+    
+     //display content using a basic HTML replacement
+     
+    function displayContents(txt) {
+        var el = document.getElementById('main'); 
+        el.innerHTML = txt; //display output in DOM
+    }   
+	//Above File load function is radially available online 
+	
+	
+/* --------------------------------   File reading ends here  ---------------------------------  */
+	
+	
+	
+	
+	var pixel_X = 250;
+	var pixel_Y = 250;
+	var color = 0;
+
+	function display(output){
+	var counter=0;
+	var canvas = document.getElementById('canvas');
+	var context = canvas.getContext('2d');
+	canvas.width = 500;
+	canvas.height = 500;
+
+	context.fillStyle="red";
+	context.fillRect(0,0,500,500);
+
+    var newImage = context.createImageData(canvas.width, canvas.height);
+    var arr = context.getImageData(0, 0, canvas.width, canvas.height);
+	
+    var pixels = arr.data;
+   
+   // fill the square with same color and 0 alpha value
+    for(var i = 0; i < pixels.length; i+=4){
+	
+	   newImage.data[i] = 0; newImage.data[i + 1] = 0;  newImage.data[i + 2] = 0; newImage.data[i + 3] = 0;
+    
+    }
+	
+	
+	// Repeat algorithm for number of times
+	
+	for(var j=0; j < output.length; j++)
+	
+	{
+	
+	i=(2000*(pixel_Y-1))+((pixel_X-1)*4);    // Get center pixel at first and then get last rendered pixel after first loop
+		
+		
+		var alpha = newImage.data[i+3];    // get alpha value of pixel
+    
+	   
+         newImage.data[i] = 248;       // Red value of pixel i
+		 newImage.data[i + 1] = 152;  // Green value of pixel i
+		 newImage.data[i + 2] = 34;   // Blue value of pixel i
+		 
+        newImage.data[i + 3] = alpha + 1;  // increment Alpha value of pixel i
+		
+		
+	if(output[j]=="A")                  // Calculate mid point between last rendered pixel and corner representing "A"
+	{
+	 pixel_Y=Math.round(pixel_Y/2);
+	 pixel_X=Math.round(pixel_X/2);
+	 
+	}
+	else if(output[j]=="T")				// Calculate mid point between last rendered pixel and corner representing "T"
+	{
+	 pixel_Y=500-Math.round((500-pixel_Y)/2);
+	 pixel_X=Math.round(pixel_X/2);
+
+	}
+	else if(output[j]=="C")				// Calculate mid point between last rendered pixel and corner representing "C"
+	{
+	 pixel_Y=Math.round(pixel_Y/2);
+	 pixel_X=500-Math.round((500-pixel_X)/2);
+	
+	}
+	else if(output[j]=="G")				// Calculate mid point between last rendered pixel and corner representing "G"
+	{
+	 pixel_Y=500-Math.round((500-pixel_Y)/2);
+	 pixel_X=500-Math.round((500-pixel_X)/2);
+	
+	}
+	else								// Calculate nothing
+	{
+	 pixel_Y=pixel_Y;
+	 pixel_X=pixel_X;
+	 
+	}
+	
+    }
+	
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.putImageData(newImage, 0, 0);
+	}
+	
+	
+	function displayStartCodons()
+	{
+		// Code for display only start codons here
+	}
+	
+	
+	
+</script>
+</head>
+<body onload="checkFileAPI();">
+    <div id="container">    
+        <input type="file" onchange='readText(this)' />
+        <br/>
+        <hr/>   
+        <h3>Total number of nucleotides in file:</h3>
+        <div id="main">
+            ...
+        </div>
+    </div>
+</body>
+</html>
